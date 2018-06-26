@@ -23,6 +23,7 @@ typedef struct queue{
     int size;
 } tqueue;
 
+//static tqueue * q_init(void);
 //Funçao que inicializa a lista duplamente encadeada utilizada como fila
 static tqueue * q_init(){
     tqueue * queue = malloc(sizeof(tqueue));
@@ -50,25 +51,26 @@ static void * q_pop(tqueue * queue){
     queue->start = queue->start->next;
     free(queue->start->prev);
     queue->start->prev = NULL;
-    return;
+    return key;
 }
 
-//Funçao auxiliar para ajudar a debugar o programa.
-static void q_print(tqueue * queue){
+// Funçao auxiliar para ajudar a debugar o programa.
+// Casta dados para um vertice do cgraph
+static void q_print_v(tqueue * queue){
     tnode * node = queue->start;
     while (node){
-        printf("%s ", node->data);
+        Agnode_t * v = node->data;
+        printf("%s ", agnameof(v));
         node = node->next;
     }
     putchar('\n');
 }
-
 static int q_size(tqueue * queue){
     return queue->size;
 }
 
 // Desaloca fila
-static int q_clear(tqueue * queue){
+static void q_free(tqueue * queue){
     tnode * node = queue->start;
     tnode * prev = NULL; 
     while (node){
@@ -92,6 +94,11 @@ static int q_clear(tqueue * queue){
 typedef grafo * agraph_t;
 
 //------------------------------------------------------------------------------
+// (apontador para) estrutura de dados para representar um vertice
+
+typedef struct vertice * agnode_t;
+
+//------------------------------------------------------------------------------
 // desaloca toda a memória usada em *g
 // 
 // devolve 1 em caso de sucesso,
@@ -104,7 +111,18 @@ int destroi_grafo(grafo g) {
 //------------------------------------------------------------------------------
 // devolve o número de vértices de g
 int n_vertices(grafo g){
-  return 0;
+  Agraph_t * graph = (Agraph_t *) g;
+  Agnode_t * v;
+  int i = 0;
+  for (v = agfstnode(graph); v; v = agnxtnode(graph,v)){
+    i++;
+  }
+  return i;
+}
+
+// devolve o vértice de nome 'nome' em g
+vertice vertice_de_nome(char *nome, grafo g){
+  return NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -117,9 +135,9 @@ int n_vertices(grafo g){
 grafo le_grafo(FILE *input) {
 
     Agraph_t *g;
-    if (g = agread(input, NULL)){
+    if ((g = agread(input, NULL))){
 
-        return g;
+        return (grafo)g;
     }
     else return NULL;
 }
@@ -132,15 +150,19 @@ grafo le_grafo(FILE *input) {
 //         NULL, em caso de erro 
 
 grafo escreve_grafo(FILE *output, grafo g) {
+    g = (Agraph_t *) g;
     if (g = agwrite(g, output)){
-        return g;
+        return (grafo) g;
     }
     else return NULL;
 }
 //------------------------------------------------------------------------------
 // devolve um número entre 0 e o número de vertices de g
 
-unsigned int cor(vertice v, grafo g);
+unsigned int cor(vertice v, grafo g){
+
+  return 0;
+}
 
 
 //------------------------------------------------------------------------------
@@ -148,9 +170,17 @@ unsigned int cor(vertice v, grafo g);
 // posições) com os vértices de g ordenados de acordo com uma busca em
 // largura lexicográfica sobre g a partir de r e devolve v
 
-vertice *busca_lexicografica(vertice r, grafo g, vertice *v){
-
-
+vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
+  Agraph_t * graph = (Agraph_t *)g;
+  Agnode_t * u; 
+  u = agfstnode(graph);
+  tqueue * Q = q_init();
+  q_push(Q, (void *) u);
+  
+  u = (Agnode_t * ) q_pop(Q);
+  printf("%s\n", agnameof(u));
+  q_free(Q);
+  return (vertice *) v;
 }
 
 //------------------------------------------------------------------------------
@@ -163,7 +193,7 @@ vertice *busca_lexicografica(vertice r, grafo g, vertice *v){
 
 unsigned int colore(grafo g, vertice *v){
 
-
+  return 0;
 }
 
 //------------------------------------------------------------------------------
