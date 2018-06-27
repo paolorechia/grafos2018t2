@@ -20,14 +20,16 @@ typedef struct cel_struct{
 typedef struct queue{
     tnode * start;            // ponteiro para primeiro elemento da fila
     tnode * end;              // ponteiro para ultimo elemento da fila
+    size_t data_tsize;        // tamanho em bytes dos dados desta fila
     int size;
 } tqueue;
 
 //static tqueue * q_init(void);
 //Funçao que inicializa a lista duplamente encadeada utilizada como fila
-static tqueue * q_init(){
+static tqueue * q_init(size_t data_type_size){
     tqueue * queue = malloc(sizeof(tqueue));
-    queue->start = malloc(sizeof(tnode));
+    queue->data_tsize=data_type_size;
+    queue->start = malloc(sizeof(queue->data_tsize));
     queue->start->prev = NULL;
     queue->start->next = NULL;
     queue->end = queue->start;
@@ -40,17 +42,24 @@ static void q_push(tqueue * queue, void * key){
     queue->end->next = malloc(sizeof(tnode));
     queue->end->next->prev = queue->end;
     queue->end = queue->end->next;
-    queue->end->data = key;
+    queue->end->data = malloc(sizeof(queue->data_tsize));
+    memcpy(queue->end->data, key, queue->data_tsize);
     queue->end->next = NULL;
+    queue->size++;
     return;
 }
 
 // Funcao que retorna o primeiro da fila
 static void * q_pop(tqueue * queue){
-    void * key = queue->start->data;
+    if (queue->size == 0){
+      return NULL;
+    }
+    void * key = malloc(sizeof(queue->data_tsize));
+    memcpy(key, queue->start->data, queue->data_tsize);
     queue->start = queue->start->next;
     free(queue->start->prev);
     queue->start->prev = NULL;
+    queue->size--;
     return key;
 }
 
@@ -174,10 +183,11 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   Agraph_t * graph = (Agraph_t *)g;
   Agnode_t * u; 
   u = agfstnode(graph);
-  tqueue * Q = q_init();
-  q_push(Q, (void *) u);
+  tqueue * Q = q_init(sizeof(Agnode_t)); // inicializa fila de vertices
+  q_push(Q, (void *) u, sizeof(u));
+
   
-  u = (Agnode_t * ) q_pop(Q);
+  u = (Agnode_t * ) q_pop(Q, sizeof(agnode_t));
   printf("%s\n", agnameof(u));
   q_free(Q);
   return (vertice *) v;
