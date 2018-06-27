@@ -27,9 +27,8 @@ typedef struct queue{
 //Funçao que inicializa a lista duplamente encadeada utilizada como fila
 static tqueue * q_init(){
     tqueue * queue = malloc(sizeof(tqueue));
-    queue->start = malloc(sizeof(tnode));
-    queue->start->prev = NULL;
-    queue->start->next = NULL;
+    queue->start = NULL;
+    queue->end = NULL;
     queue->end = queue->start;
     queue->size = 0;
     return queue;
@@ -37,20 +36,43 @@ static tqueue * q_init(){
 
 //Funçao usada para inserir um elemento na fila
 static void q_push(tqueue * queue, void * key){
-    queue->end->next = malloc(sizeof(tnode));
-    queue->end->next->prev = queue->end;
-    queue->end = queue->end->next;
-    queue->end->data = key;
+    if (queue->size == 0){
+      queue->start = malloc(sizeof(tnode));
+      queue->end = queue->start;
+      queue->end->data = key;
+      queue->end->prev = NULL;
+    }
+    else{
+      queue->end->next = malloc(sizeof(tnode));
+      queue->end->next->prev = queue->end;
+      queue->end = queue->end->next;
+      queue->end->data = key;
+    }
     queue->end->next = NULL;
+    queue->size++;
     return;
 }
 
+
 // Funcao que retorna o primeiro da fila
 static void * q_pop(tqueue * queue){
-    void * key = queue->start->data;
-    queue->start = queue->start->next;
-    free(queue->start->prev);
-    queue->start->prev = NULL;
+    if (queue->size == 0){
+      return -1;
+    }
+    void *key;
+    if (queue->size == 1){
+      key = queue->start->data;
+      free(queue->start);
+      queue->start = NULL;
+      queue->end = NULL;
+    }
+    else{
+      key = queue->start->data;
+      queue->start = queue->start->next;
+      free(queue->start->prev);
+      queue->start->prev = NULL;
+    }
+    queue->size--;
     return key;
 }
 
@@ -75,8 +97,10 @@ static void q_free(tqueue * queue){
     tnode * prev = NULL; 
     while (node){
       node = node->next;
-      prev = node->prev;
-      free(prev);
+      if (node){
+        prev = node->prev;
+        free(prev);
+      }
     }
     free(queue);
 }
