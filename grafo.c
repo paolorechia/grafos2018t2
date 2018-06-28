@@ -56,8 +56,8 @@ static tqueue * q_init(){
 static void q_push(tqueue * queue, void * key){
     if (queue->size == 0){
       queue->start = malloc(sizeof(tnode));
+      queue->start->data = key;
       queue->end = queue->start;
-      queue->end->data = key;
       queue->end->prev = NULL;
     }
     else{
@@ -95,7 +95,8 @@ static void * q_pop(tqueue * queue){
 }
 
 static void * q_pop_maxlabel(tqueue * queue){
-    if (queue->size == 0){
+    printf ("Queue size: %d\n");
+    if (queue->size == 0 || queue->start == NULL){
       return -1;
     }
     void *key;
@@ -110,29 +111,42 @@ static void * q_pop_maxlabel(tqueue * queue){
       int label_size = 0;
       atrb_t * atrib;
       tnode * node = queue->start;
+      printf("Start:  %s\n", agnameof(node->data));
+//      tnode * node = queue->start->next;
       while (node){
         atrib = (atrb_t *) aggetrec((Agnode_t *)node->data, "atrb_t", FALSE);
         label_size = strlen(atrib->rotulo);
-        printf("%d\n", label_size);
+        printf("Node:  %s, label: %d\n", agnameof(node->data), label_size);
         if (label_size >= max_label_size){
           max_node = node;
           max_label_size = label_size;
         }
         node = node->next;
       }
+      printf("Found max: %s, label: %d\n", agnameof(max_node->data), max_label_size);
+      // sanity check, not supposed to enter here
+      if (max_node->prev != NULL && max_node->next !=NULL){
+        max_node->next->prev = max_node->prev;
+        max_node->prev->next = max_node->next;
+      }
+      // only prev is NULL
+      else if (max_node->prev == NULL && max_node->next!=NULL){
+        max_node->next->prev = NULL;
+      }
+      // only next is NULL
+      else if (max_node->prev != NULL && max_node->next ==NULL){
+        max_node->prev->next=NULL;
+      }
     }
-    // sanity check,, not supposed to enter here
-    if (max_node->prev != NULL && max_node->next !=NULL){
-      max_node->next->prev = max_node->prev;
-      max_node->prev->next = max_node->next;
+    if (max_node == queue->start){
+      if (max_node->next != NULL){
+        queue->start=queue->start->next;
+      }
     }
-    // only prev is NULL
-    else if (max_node->prev == NULL && max_node->next!=NULL){
-      max_node->next->prev = NULL;
-    }
-    // only next is NULL
-    else if (max_node->prev != NULL && max_node->next ==NULL){
-      max_node->prev->next=NULL;
+    if (max_node == queue->end){
+      if (max_node->prev != NULL){
+        queue->end=queue->end->prev;
+      }
     }
     key = max_node->data;
     free(max_node);
@@ -284,26 +298,21 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
     q_push(V, (void *) u);
   }
   
-  printf("Ouch\n");
-
-  while ((u = (Agnode_t * ) q_pop_maxlabel(V)) != -1){
-    printf("%s %d\n", agnameof(u), atributos_u->estado);
-  }
   // Define a raiz
-
   u = agnode(graph, agnameof(raiz), FALSE);
   atributos_u = (atrb_t *) agbindrec(u, "atrb_t", sizeof(atrb_t), FALSE);
   sprintf(tam_V, "%d", V->size);
   strcpy(atributos_u->rotulo,tam_V);
 
+  while ((u = (Agnode_t * ) q_pop_maxlabel(V)) != -1){
+    printf("%s %d\n", agnameof(u), atributos_u->estado);
+  }
 /*
   // Inicia a busca
   while ((u = (Agnode_t * ) q_pop_maxlabel(V)) != -1){
     atributos_u = aggetrec(u, "atrb_t", FALSE);
     printf("%s %d\n", agnameof(u), atributos_u->estado);
-    if (atributos_u->estado = 0){
-      // marca u como visitado
-      atributos_u->estado = 1;
+    if (atributos_u->estado != 2){
       // registra quantos vertices ainda estao em V
       sprintf(tam_V, "%d", V->size);
       // Para cada w E vizinhanca(u)
@@ -317,12 +326,15 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
           atributos_w = (atrb_t *) agbindrec(w, "atrb_t", sizeof(atrb_t), FALSE);
           strcpy(atributos_w->rotulo, agnameof(u));
           strcat(atributos_w->rotulo, tam_V);
-          q_push(V, (void *)w); 
+          atributos_w->estado = 1;
+//          q_push(V, (void *)w); 
       }
     }
+    // marca u como buscado
     atributos_u->estado = 2;
   }
 */
+
   q_free(V);
   return (vertice *) v;
 }
