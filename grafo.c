@@ -113,6 +113,7 @@ static void * q_pop_maxlabel(tqueue * queue){
       while (node){
         atrib = (atrb_t *) aggetrec((Agnode_t *)node->data, "atrb_t", FALSE);
         label_size = strlen(atrib->rotulo);
+        printf("%d\n", label_size);
         if (label_size >= max_label_size){
           max_node = node;
           max_label_size = label_size;
@@ -121,27 +122,22 @@ static void * q_pop_maxlabel(tqueue * queue){
       }
     }
     // sanity check,, not supposed to enter here
-    if (max_node == NULL){
-      return NULL;
+    if (max_node->prev != NULL && max_node->next !=NULL){
+      max_node->next->prev = max_node->prev;
+      max_node->prev->next = max_node->next;
     }
-    else {
-      if (max_node->prev != NULL && max_node->next !=NULL){
-        max_node->next->prev = max_node->prev;
-        max_node->prev->next = max_node->next;
-      }
-      // only prev is NULL
-      else if (max_node->prev == NULL && max_node->next!=NULL){
-        max_node->next->prev = NULL;
-      }
-      // only next is NULL
-      else if (max_node->prev != NULL && max_node->next ==NULL){
-        max_node->prev=NULL;
-      }
-      key = max_node->data;
-//      free(max_node);
-      queue->size--;
-      return key;
+    // only prev is NULL
+    else if (max_node->prev == NULL && max_node->next!=NULL){
+      max_node->next->prev = NULL;
     }
+    // only next is NULL
+    else if (max_node->prev != NULL && max_node->next ==NULL){
+      max_node->prev->next=NULL;
+    }
+    key = max_node->data;
+    free(max_node);
+    queue->size--;
+    return key;
 }
 
 // Funçao auxiliar para ajudar a debugar o programa.
@@ -289,6 +285,7 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   }
   
   printf("Ouch\n");
+
   while ((u = (Agnode_t * ) q_pop_maxlabel(V)) != -1){
     printf("%s %d\n", agnameof(u), atributos_u->estado);
   }
