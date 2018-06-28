@@ -4,12 +4,18 @@
 #include <graphviz/cgraph.h>
 #include "grafo.h"
 
+#define TAM_ROTULO 100
 
 /*************************************************/
 /* Estrutura de dados auxiliar - Fila            */
 /*                                               */
 /* FIFO implementada sobre                       */
 /* uma lista duplamente encadeada                */
+/*                                               */
+/*                                               */
+/*                                               */
+/*                                               */
+/*                                               */
 /*************************************************/
 typedef struct cel_struct{
     void * data;              // ponteiro generico para dados
@@ -22,6 +28,18 @@ typedef struct queue{
     tnode * end;              // ponteiro para ultimo elemento da fila
     int size;
 } tqueue;
+
+/*************************************************/
+/* Atributos internos dos vertices               */
+/*************************************************/
+
+typedef struct vertice_s{
+  Agrec_t h;
+  char rotulo[TAM_ROTULO];
+  int estado;
+  int cor;
+} atrb_t; // define atributos do vertice
+
 
 //static tqueue * q_init(void);
 //Funçao que inicializa a lista duplamente encadeada utilizada como fila
@@ -76,6 +94,56 @@ static void * q_pop(tqueue * queue){
     return key;
 }
 
+static void * q_pop_maxlabel(tqueue * queue){
+    if (queue->size == 0){
+      return -1;
+    }
+    void *key;
+    tnode * max_node;
+    if (queue->size == 1){
+      max_node = queue->start;
+      queue->start = NULL;
+      queue->end = NULL;
+    }
+    else{
+      int max_label_size = 0;
+      int label_size = 0;
+      atrb_t * atrib;
+      tnode * node = queue->start;
+      while (node){
+        atrib = (atrb_t *) aggetrec((Agnode_t *)node->data, "atrb_t", FALSE);
+        label_size = strlen(atrib->rotulo);
+        if (label_size >= max_label_size){
+          max_node = node;
+          max_label_size = label_size;
+        }
+        node = node->next;
+      }
+    }
+    // sanity check,, not supposed to enter here
+    if (max_node == NULL){
+      return NULL;
+    }
+    else {
+      if (max_node->prev != NULL && max_node->next !=NULL){
+        max_node->next->prev = max_node->prev;
+        max_node->prev->next = max_node->next;
+      }
+      // only prev is NULL
+      else if (max_node->prev == NULL && max_node->next!=NULL){
+        max_node->next->prev = NULL;
+      }
+      // only next is NULL
+      else if (max_node->prev != NULL && max_node->next ==NULL){
+        max_node->prev=NULL;
+      }
+      key = max_node->data;
+//      free(max_node);
+      queue->size--;
+      return key;
+    }
+}
+
 // Funçao auxiliar para ajudar a debugar o programa.
 // Casta dados para um vertice do cgraph
 static void q_print_v(tqueue * queue){
@@ -108,16 +176,6 @@ static void q_free(tqueue * queue){
 /* Fim da estrutura de dados fila                */
 /*************************************************/
 
-
-/*************************************************/
-/* Atributos internos dos vertices               */
-/*************************************************/
-
-typedef struct vertice_s{
-  Agrec_t h;
-  int estado;
-  int cor;
-} atrb_t; // define atributos do vertice
 
 //------------------------------------------------------------------------------
 // (apontador para) estrutura de dados para representar um grafo
@@ -161,7 +219,7 @@ int n_vertices(grafo g){
 
 // devolve o vértice de nome 'nome' em g
 vertice vertice_de_nome(char *nome, grafo g){
-  return NULL;
+  return (vertice *) agnode((agraph_t*)g, nome, FALSE);
 }
 
 //------------------------------------------------------------------------------
@@ -211,25 +269,64 @@ unsigned int cor(vertice v, grafo g){
 
 vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   Agraph_t * graph = (Agraph_t *)g;
-//  aginit(graph, 1, "atrb_t", sizeof(atrb_t), 0);
   Agnode_t * u; 
-  atrb_t * atributos;
-  tqueue * Q = q_init();
-  for(u = agfstnode(graph); u; u = agnxtnode(graph, u)){
-    atributos = (atrb_t *) agbindrec(u, "atrb_t", sizeof(atrb_t), FALSE);
-    atributos->estado = 0;
-    atributos->cor= 0;
-  }
-  u = agfstnode(graph);
-  q_push(Q, (void *) u);
-  while ((u = (Agnode_t * ) q_pop(Q)) != -1){
-    atributos = aggetrec(u, "atrb_t", FALSE);
-    printf("%s %d\n", agnameof(u), atributos->estado);
-    if (atributos->estado = 0){
-    }
-  }
+  Agnode_t * w; 
+  Agnode_t * raiz = (agnode_t *) r; 
+  Agedge_t * e; 
+  atrb_t * atributos_u;
+  atrb_t * atributos_w;
+  tqueue * V = q_init();
+  int num_vertices_g = n_vertices(g);
+  char tam_V[16];
 
-  q_free(Q);
+  // Inicializa vertices, monta conjunto inicial com todos os vertices
+  for(u = agfstnode(graph); u; u = agnxtnode(graph, u)){
+    atributos_u = (atrb_t *) agbindrec(u, "atrb_t", sizeof(atrb_t), FALSE);
+    atributos_u->estado = 0;
+    atributos_u->cor= 0;
+    strcpy(atributos_u->rotulo, "");
+    q_push(V, (void *) u);
+  }
+  
+  printf("Ouch\n");
+  while ((u = (Agnode_t * ) q_pop_maxlabel(V)) != -1){
+    printf("%s %d\n", agnameof(u), atributos_u->estado);
+  }
+  // Define a raiz
+
+  u = agnode(graph, agnameof(raiz), FALSE);
+  atributos_u = (atrb_t *) agbindrec(u, "atrb_t", sizeof(atrb_t), FALSE);
+  sprintf(tam_V, "%d", V->size);
+  strcpy(atributos_u->rotulo,tam_V);
+
+/*
+  // Inicia a busca
+  while ((u = (Agnode_t * ) q_pop_maxlabel(V)) != -1){
+    atributos_u = aggetrec(u, "atrb_t", FALSE);
+    printf("%s %d\n", agnameof(u), atributos_u->estado);
+    if (atributos_u->estado = 0){
+      // marca u como visitado
+      atributos_u->estado = 1;
+      // registra quantos vertices ainda estao em V
+      sprintf(tam_V, "%d", V->size);
+      // Para cada w E vizinhanca(u)
+      for (e = agfstedge(graph,u); e; e = agnxtedge(graph,e,u)){
+          if (!strcmp(agnameof(u), agnameof(aghead(e)))){
+              w = agnode(graph, agnameof(agtail(e)), FALSE);
+          }
+          else{
+              w = agnode(graph, agnameof(aghead(e)), FALSE);
+          }
+          atributos_w = (atrb_t *) agbindrec(w, "atrb_t", sizeof(atrb_t), FALSE);
+          strcpy(atributos_w->rotulo, agnameof(u));
+          strcat(atributos_w->rotulo, tam_V);
+          q_push(V, (void *)w); 
+      }
+    }
+    atributos_u->estado = 2;
+  }
+*/
+  q_free(V);
   return (vertice *) v;
 }
 
