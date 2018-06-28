@@ -108,6 +108,17 @@ static void q_free(tqueue * queue){
 /* Fim da estrutura de dados fila                */
 /*************************************************/
 
+
+/*************************************************/
+/* Atributos internos dos vertices               */
+/*************************************************/
+
+typedef struct vertice_s{
+  Agrec_t h;
+  int estado;
+  int cor;
+} atrb_t; // define atributos do vertice
+
 //------------------------------------------------------------------------------
 // (apontador para) estrutura de dados para representar um grafo
 // 
@@ -137,6 +148,10 @@ int destroi_grafo(grafo g) {
 int n_vertices(grafo g){
   Agraph_t * graph = (Agraph_t *) g;
   Agnode_t * v;
+/*
+  void aginit(graph, int kind, char *rec_name,
+              int rec_size, int move_to_front);
+*/
   int i = 0;
   for (v = agfstnode(graph); v; v = agnxtnode(graph,v)){
     i++;
@@ -196,20 +211,24 @@ unsigned int cor(vertice v, grafo g){
 
 vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   Agraph_t * graph = (Agraph_t *)g;
+//  aginit(graph, 1, "atrb_t", sizeof(atrb_t), 0);
   Agnode_t * u; 
+  atrb_t * atributos;
   tqueue * Q = q_init();
   for(u = agfstnode(graph); u; u = agnxtnode(graph, u)){
-    q_push(Q, (void *) u);
+    atributos = (atrb_t *) agbindrec(u, "atrb_t", sizeof(atrb_t), FALSE);
+    atributos->estado = 0;
+    atributos->cor= 0;
   }
+  u = agfstnode(graph);
+  q_push(Q, (void *) u);
   while ((u = (Agnode_t * ) q_pop(Q)) != -1){
-    printf("%s\n", agnameof(u));
-  } ;
-  for(u = agfstnode(graph); u; u = agnxtnode(graph, u)){
-    q_push(Q, (void *) u);
+    atributos = aggetrec(u, "atrb_t", FALSE);
+    printf("%s %d\n", agnameof(u), atributos->estado);
+    if (atributos->estado = 0){
+    }
   }
-  while ((u = (Agnode_t * ) q_pop(Q)) != -1){
-    printf("%s\n", agnameof(u));
-  } ;
+
   q_free(Q);
   return (vertice *) v;
 }
