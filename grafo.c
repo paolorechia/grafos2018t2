@@ -197,12 +197,19 @@ unsigned int cor(vertice v, grafo g){
 vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   Agraph_t * graph = (Agraph_t *)g;
   Agnode_t * u; 
-  u = agfstnode(graph);
   tqueue * Q = q_init();
-  q_push(Q, (void *) u);
-  
-  u = (Agnode_t * ) q_pop(Q);
-  printf("%s\n", agnameof(u));
+  for(u = agfstnode(graph); u; u = agnxtnode(graph, u)){
+    q_push(Q, (void *) u);
+  }
+  while ((u = (Agnode_t * ) q_pop(Q)) != -1){
+    printf("%s\n", agnameof(u));
+  } ;
+  for(u = agfstnode(graph); u; u = agnxtnode(graph, u)){
+    q_push(Q, (void *) u);
+  }
+  while ((u = (Agnode_t * ) q_pop(Q)) != -1){
+    printf("%s\n", agnameof(u));
+  } ;
   q_free(Q);
   return (vertice *) v;
 }
