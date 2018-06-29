@@ -41,7 +41,7 @@ typedef struct queue{
 
 //static tqueue * q_init(void);
 //Funçao que inicializa a lista duplamente encadeada utilizada como fila
-static tqueue * q_init(){
+static tqueue * q_init(void){
     tqueue * queue = malloc(sizeof(tqueue));
     queue->start = NULL;
     queue->end = NULL;
@@ -69,29 +69,6 @@ static void q_push(tqueue * queue, void * key){
     return;
 }
 
-
-// Funcao que retorna o primeiro da fila
-static void * q_pop(tqueue * queue){
-    if (queue->size == 0){
-      return -1;
-    }
-    void *key;
-    if (queue->size == 1){
-      key = queue->start->data;
-      free(queue->start);
-      queue->start = NULL;
-      queue->end = NULL;
-    }
-    else{
-      key = queue->start->data;
-      queue->start = queue->start->next;
-      free(queue->start->prev);
-      queue->start->prev = NULL;
-    }
-    queue->size--;
-    return key;
-}
-
 // Funcao que busca o vertice de maior rotulo na fila
 static void * q_pop_maxlabel(tqueue * queue){
     if (queue->size == 0 || queue->start == NULL){
@@ -111,7 +88,7 @@ static void * q_pop_maxlabel(tqueue * queue){
       tnode * node = queue->start;
       while (node){
         atrib = (atrb_t *) aggetrec((Agnode_t *)node->data, "atrb_t", FALSE);
-        label_size = strlen(atrib->rotulo);
+        label_size = (int)strlen(atrib->rotulo);
         if (label_size >= max_label_size){
           max_node = node;
           max_label_size = label_size;
@@ -145,21 +122,6 @@ static void * q_pop_maxlabel(tqueue * queue){
     free(max_node);
     queue->size--;
     return key;
-}
-
-// Funçao auxiliar para ajudar a debugar o programa.
-// Casta dados para um vertice do cgraph
-static void q_print_v(tqueue * queue){
-    tnode * node = queue->start;
-    while (node){
-        Agnode_t * v = node->data;
-//        printf("%s ", agnameof(v));
-        node = node->next;
-    }
-    putchar('\n');
-}
-static int q_size(tqueue * queue){
-    return queue->size;
 }
 
 // Desaloca fila
@@ -222,7 +184,8 @@ int n_vertices(grafo g){
 
 // devolve o vértice de nome 'nome' em g
 vertice vertice_de_nome(char *nome, grafo g){
-  return (vertice *) agnode((agraph_t*)g, nome, FALSE);
+  Agraph_t * graph = (Agraph_t *) g;
+  return (vertice) agnode(graph, nome, FALSE);
 }
 
 //------------------------------------------------------------------------------
@@ -250,9 +213,9 @@ grafo le_grafo(FILE *input) {
 //         NULL, em caso de erro 
 
 grafo escreve_grafo(FILE *output, grafo g) {
-    g = (Agraph_t *) g;
-    if (g = agwrite(g, output)){
-        return (grafo) g;
+    Agraph_t * graph = (Agraph_t *) g;
+    if (agwrite(graph, output)){
+        return (grafo) graph;
     }
     else return NULL;
 }
@@ -299,7 +262,7 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   tqueue * V = q_init();
   int num_vertices_g = n_vertices(g);
   int i = 0;
-  Agedge_t ** ordem_lex = malloc(sizeof(agnode_t) * num_vertices_g);
+  Agnode_t ** ordem_lex = malloc(sizeof(agnode_t) * num_vertices_g);
   char tam_V[16];
 
   // Inicializa vertices, monta conjunto inicial com todos os vertices
@@ -337,16 +300,16 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
     }
     // marca u como buscado
     atributos_u->estado = 2;
-    ordem_lex[i]=u;
+    ordem_lex[i]=(Agnode_t *) u;
     i++;
   }
   // preenche o vetor 'v' com o reverso da ordem lexografica
   int j = num_vertices_g -1;
-  for (int i = 0; i < num_vertices_g; i++){
+  for (i = 0; i < num_vertices_g; i++){
     u = ordem_lex[j];
     atributos_u = (atrb_t *) aggetrec(u, "atrb_t", FALSE);
 //    printf("Vertice: %s (%s)\n", agnameof(u), atributos_u->rotulo);
-    v[i] = u;
+    v[i] = (vertice) u;
     j--;
   }
   q_free(V);
@@ -356,7 +319,7 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
 
 // Transforma o numero da cor em uma string rgb
 // Grava resultado na string saida
-void gera_rgb(int num_cor, int cor_max, char saida[7]){
+static void gera_rgb(unsigned int num_cor, unsigned int cor_max, char saida[7]){
   
   // se sao poucas colores, colore de forma facil de visualizar
   if (cor_max <= 6){
@@ -393,18 +356,17 @@ void gera_rgb(int num_cor, int cor_max, char saida[7]){
 //     1. cor(v,g) > 0 para todo vértice de g
 //     2. cor(u,g) != cor(v,g), para toda aresta {u,v} de g
 unsigned int colore(grafo g, vertice *v){
-  Agnode_t * u;
   Agnode_t * w;
   Agedge_t * e;
   Agraph_t * graph = (Agraph_t*) g;
   atrb_t * atrb;
-  int cor_max = 0;
+  unsigned int cor_max = 0;
+  unsigned int cor_minima = 1;
+  unsigned int * cores_ocupadas;
   int tam = n_vertices(g);
   int n_vizinhos;
   int i = 0;
   int j = 0;
-  int * cores_ocupadas;
-  int cor_minima = 1;
   int encontrei_cor = 0;
 
   /* Pinta todos os vertices com a cor 0 */
@@ -444,10 +406,10 @@ unsigned int colore(grafo g, vertice *v){
   }
 
   // Transforma atributos internos do grafo em cores externas //
-  Agsym_t * color = agattr(graph, AGNODE, "color", "#000000");
-  char string_cor[7];
+  char string_cor[7]="#000000";
+  Agsym_t * color = agattr(graph, AGNODE, "color", string_cor);
   for (i = 0; i < tam; i++){
-    cor_minima = cor(v[i], graph);
+    cor_minima = cor(v[i], (grafo)graph);
     gera_rgb(cor_minima, cor_max, string_cor);
     agxset(v[i], color, string_cor);
   }
