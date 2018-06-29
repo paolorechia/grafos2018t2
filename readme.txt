@@ -39,7 +39,7 @@ Tópicos:
       Se (u.visitado != 2)
         Para cada w E vizinhanca(u)
         Se (w.visitado != 2)
-          w.rotulo = u.rotulo + |V(G)|
+          w.rotulo = w.rotulo + |V(G)|
           w.visitado = 1
       u.visitado = 2
 

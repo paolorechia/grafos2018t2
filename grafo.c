@@ -291,7 +291,6 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
           w = vizinho(graph, u, e);
           atributos_w = (atrb_t *) agbindrec(w, "atrb_t", sizeof(atrb_t), FALSE);
           if (atributos_w->estado != 2){
-            strcat(atributos_w->rotulo, atributos_u->rotulo);
             strcat(atributos_w->rotulo, tam_V);
             // marca como visitado (irrelevante aparentemente)
             atributos_w->estado = 1;
