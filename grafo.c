@@ -7,7 +7,17 @@
 #define TAM_ROTULO 1000
 
 /*************************************************/
-/* Estrutura de dados auxiliar - Fila            */
+/* Atributos internos dos vertices               */
+typedef struct vertice_s{
+  Agrec_t h;
+  char rotulo[TAM_ROTULO];
+  int estado;
+  unsigned int cor;
+} atrb_t; // define atributos do vertice
+/*************************************************/
+
+/*************************************************/
+/* Estrutura de dados auxiliar - Fila modificada */
 /*                                               */
 /* FIFO implementada sobre                       */
 /* uma lista duplamente encadeada                */
@@ -28,18 +38,6 @@ typedef struct queue{
     tnode * end;              // ponteiro para ultimo elemento da fila
     int size;
 } tqueue;
-
-/*************************************************/
-/* Atributos internos dos vertices               */
-/*************************************************/
-
-typedef struct vertice_s{
-  Agrec_t h;
-  char rotulo[TAM_ROTULO];
-  int estado;
-  unsigned int cor;
-} atrb_t; // define atributos do vertice
-
 
 //static tqueue * q_init(void);
 //Funçao que inicializa a lista duplamente encadeada utilizada como fila
@@ -94,8 +92,8 @@ static void * q_pop(tqueue * queue){
     return key;
 }
 
+// Funcao que busca o vertice de maior rotulo na fila
 static void * q_pop_maxlabel(tqueue * queue){
-//    printf ("Queue size: %d\n", queue->size);
     if (queue->size == 0 || queue->start == NULL){
       return -1;
     }
@@ -111,20 +109,15 @@ static void * q_pop_maxlabel(tqueue * queue){
       int label_size = 0;
       atrb_t * atrib;
       tnode * node = queue->start;
-//      printf("Start:  %s\n", agnameof(node->data));
-//      tnode * node = queue->start->next;
       while (node){
         atrib = (atrb_t *) aggetrec((Agnode_t *)node->data, "atrb_t", FALSE);
         label_size = strlen(atrib->rotulo);
-//        printf("Node:  %s, label: %d\n", agnameof(node->data), label_size);
         if (label_size >= max_label_size){
           max_node = node;
           max_label_size = label_size;
         }
         node = node->next;
       }
-//      printf("Found max: %s, label: %d\n", agnameof(max_node->data), max_label_size);
-      // sanity check, not supposed to enter here
       if (max_node->prev != NULL && max_node->next !=NULL){
         max_node->next->prev = max_node->prev;
         max_node->prev->next = max_node->next;
@@ -183,7 +176,7 @@ static void q_free(tqueue * queue){
     free(queue);
 }
 /*************************************************/
-/* Fim da estrutura de dados fila                */
+/* Fim da estrutura de dados fila modificada     */
 /*************************************************/
 
 
@@ -281,6 +274,7 @@ static Agnode_t * vizinho(Agraph_t * g, Agnode_t * u, Agedge_t * e){
         return agnode(g, agnameof(aghead(e)), FALSE);
 }
 
+// retorna tamanho da vizinhanca de u
 static int tam_vizinhanca(Agraph_t * g, Agnode_t * u, Agedge_t * e){
   int tam = 0;
   for (e = agfstedge(g,u); e; e = agnxtedge(g,e,u)){
@@ -294,7 +288,6 @@ static int tam_vizinhanca(Agraph_t * g, Agnode_t * u, Agedge_t * e){
 // preenche o vetor v (presumidamente um vetor com n_vertices(g)
 // posições) com os vértices de g ordenados de acordo com uma busca em
 // largura lexicográfica sobre g a partir de r e devolve v
-
 vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   Agraph_t * graph = (Agraph_t *)g;
   Agnode_t * u; 
@@ -349,11 +342,10 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   }
   // preenche o vetor 'v' com o reverso da ordem lexografica
   int j = num_vertices_g -1;
-//  printf("Preenchendo v[i]\n");
   for (int i = 0; i < num_vertices_g; i++){
     u = ordem_lex[j];
     atributos_u = (atrb_t *) aggetrec(u, "atrb_t", FALSE);
-    printf("Vertice: %s (%s)\n", agnameof(u), atributos_u->rotulo);
+//    printf("Vertice: %s (%s)\n", agnameof(u), atributos_u->rotulo);
     v[i] = u;
     j--;
   }
@@ -367,7 +359,7 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
 void gera_rgb(int num_cor, int cor_max, char saida[7]){
   
   // se sao poucas colores, colore de forma facil de visualizar
-  if (cor_max <= 5){
+  if (cor_max <= 6){
     char * cores[7] = {"#000000",
                        "#FF0000", "#00FF00", 
                        "#0000FF", "#FF00FF",
@@ -419,7 +411,6 @@ unsigned int colore(grafo g, vertice *v){
   for (i = 0; i < tam; i++){
     atrb = aggetrec(v[i], "atrb_t", FALSE);
     atrb->cor = 0;
-//    printf("Zerando cor: %s\n", agnameof(v[i]));
   }
 
   // Coloracao gulosa */
@@ -456,7 +447,6 @@ unsigned int colore(grafo g, vertice *v){
   Agsym_t * color = agattr(graph, AGNODE, "color", "#000000");
   char string_cor[7];
   for (i = 0; i < tam; i++){
-//    printf("%d\n", i);
     cor_minima = cor(v[i], graph);
     gera_rgb(cor_minima, cor_max, string_cor);
     agxset(v[i], color, string_cor);
