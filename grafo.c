@@ -85,9 +85,10 @@ static void * q_pop_maxlabel(tqueue * queue){
       int max_label_size = 0;
       int label_size = 0;
       atrb_t * atrib;
+      char atrib_str[6]="atrb_t";
       tnode * node = queue->start;
       while (node){
-        atrib = (atrb_t *) aggetrec((Agnode_t *)node->data, "atrb_t", FALSE);
+        atrib = (atrb_t *) aggetrec((Agnode_t *)node->data, atrib_str, FALSE);
         label_size = (int)strlen(atrib->rotulo);
         if (label_size >= max_label_size){
           max_node = node;
@@ -224,8 +225,9 @@ grafo escreve_grafo(FILE *output, grafo g) {
 
 // Nao utilizamos o ponteiro para o grafo
 unsigned int cor(vertice v, grafo g){
+  char atrbstr[6] = "atrb_t";
   Agnode_t * u = (Agnode_t *) v;
-  atrb_t *  atrb = (atrb_t *) aggetrec(u, "atrb_t", FALSE);
+  atrb_t *  atrb = (atrb_t *) aggetrec(u, atrbstr, FALSE);
   return atrb->cor;
 }
 
@@ -259,6 +261,7 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   Agedge_t * e; 
   atrb_t * atributos_u;
   atrb_t * atributos_w;
+  char atrbstr[6]= "atrb_t";
   tqueue * V = q_init();
   int num_vertices_g = n_vertices(g);
   int i = 0;
@@ -267,7 +270,7 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
 
   // Inicializa vertices, monta conjunto inicial com todos os vertices
   for(u = agfstnode(graph); u; u = agnxtnode(graph, u)){
-    atributos_u = (atrb_t *) agbindrec(u, "atrb_t", sizeof(atrb_t), FALSE);
+    atributos_u = (atrb_t *) agbindrec(u, atrbstr, sizeof(atrb_t), FALSE);
     atributos_u->estado = 0;
     strcpy(atributos_u->rotulo, "");
     q_push(V, (void *) u);
@@ -275,13 +278,13 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   
   // Define a raiz
   u = agnode(graph, agnameof(raiz), FALSE);
-  atributos_u = (atrb_t *) agbindrec(u, "atrb_t", sizeof(atrb_t), FALSE);
+  atributos_u = (atrb_t *) agbindrec(u, atrbstr, sizeof(atrb_t), FALSE);
   sprintf(tam_V, "%d", V->size);
   strcpy(atributos_u->rotulo,tam_V);
 
   // Inicia a busca
   while ((u = (Agnode_t * ) q_pop_maxlabel(V)) != -1){
-    atributos_u = aggetrec(u, "atrb_t", FALSE);
+    atributos_u = aggetrec(u, atrbstr, FALSE);
 //    printf("%s %d\n", agnameof(u), atributos_u->estado);
     if (atributos_u->estado != 2){
       // registra quantos vertices ainda estao em V
@@ -289,7 +292,7 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
       // Para cada w E vizinhanca(u)
       for (e = agfstedge(graph,u); e; e = agnxtedge(graph,e,u)){
           w = vizinho(graph, u, e);
-          atributos_w = (atrb_t *) agbindrec(w, "atrb_t", sizeof(atrb_t), FALSE);
+          atributos_w = (atrb_t *) agbindrec(w, atrbstr, sizeof(atrb_t), FALSE);
           if (atributos_w->estado != 2){
             strcat(atributos_w->rotulo, tam_V);
             // marca como visitado (irrelevante aparentemente)
@@ -306,7 +309,7 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   int j = num_vertices_g -1;
   for (i = 0; i < num_vertices_g; i++){
     u = ordem_lex[j];
-    atributos_u = (atrb_t *) aggetrec(u, "atrb_t", FALSE);
+    atributos_u = (atrb_t *) aggetrec(u, atrbstr, FALSE);
 //    printf("Vertice: %s (%s)\n", agnameof(u), atributos_u->rotulo);
     v[i] = (vertice) u;
     j--;
@@ -322,7 +325,7 @@ static void gera_rgb(unsigned int num_cor, unsigned int cor_max, char saida[7]){
   
   // se sao poucas colores, colore de forma facil de visualizar
   if (cor_max <= 6){
-    char * cores[7] = {"#000000",
+    const char * cores[7] = {"#000000",
                        "#FF0000", "#00FF00", 
                        "#0000FF", "#FF00FF",
                        "#111444", "#888222"};
@@ -359,6 +362,7 @@ unsigned int colore(grafo g, vertice *v){
   Agedge_t * e;
   Agraph_t * graph = (Agraph_t*) g;
   atrb_t * atrb;
+  char atrbstr[6]= "atrb_t";
   unsigned int cor_max = 0;
   unsigned int cor_minima = 1;
   unsigned int * cores_ocupadas;
@@ -370,7 +374,7 @@ unsigned int colore(grafo g, vertice *v){
 
   /* Pinta todos os vertices com a cor 0 */
   for (i = 0; i < tam; i++){
-    atrb = aggetrec(v[i], "atrb_t", FALSE);
+    atrb = aggetrec(v[i], atrbstr, FALSE);
     atrb->cor = 0;
   }
 
@@ -400,13 +404,14 @@ unsigned int colore(grafo g, vertice *v){
       cor_max = cor_minima;
     }
     free(cores_ocupadas);
-    atrb = aggetrec(v[i], "atrb_t", FALSE);
+    atrb = aggetrec(v[i], atrbstr, FALSE);
     atrb->cor = cor_minima;
   }
 
   // Transforma atributos internos do grafo em cores externas //
   char string_cor[7]="#000000";
-  Agsym_t * color = agattr(graph, AGNODE, "color", string_cor);
+  char symstr[5] = "color";
+  Agsym_t * color = agattr(graph, AGNODE, symstr, string_cor);
   for (i = 0; i < tam; i++){
     cor_minima = cor(v[i], (grafo)graph);
     gera_rgb(cor_minima, cor_max, string_cor);
