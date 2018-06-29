@@ -5,7 +5,7 @@ CI065 - ALGORITMOS E TEORIA DOS GRAFOS - 2018-1
 
 Prof. Renato Carmo
 Alunos: Paolo Andreas Stall Rechia - GRR 20135196
-        Luiz ...                   - GRR 
+        Luiz Gustavo Jhon Rodrigues - GRR 20153723
 
 
 ------------------------------------------------------------
@@ -52,10 +52,6 @@ Tópicos:
   'pop_maxlabel', que em vez de retirar o elemento mais
   antigo da fila, retira aquele de maior rótulo (string de 
   maior comprimento).
-    Na prática, poderíamos ter implementado diretamente a
-  lista duplamente encadeada porém isso só foi constatado
-  após a fila estar 100% implementada.
-
     O tamanho do maior rótulo possível foi definido em '1000'
   em macro, ou seja, o algoritmo não funcionaria para grafos
   grandes.
@@ -72,11 +68,7 @@ Tópicos:
   sobre todos os elementos da fila O(n). Como a operação é
   chamada exatamente n vezes, temos um custo O(n^2).
 
-    A concatenação tem um custo considerável, porque os rótulos crescem
-  rapidamente e no pior caso também custa O(n) quando é o último rótulo.
-
-    Assim, o algoritmo tem um custo total aproximado entre O(n^2) a O(n^3):
-      n*custo(pop_maxlabel)*custo_concat = n *O(n) * O(n) = O(n^3)
+  A concatenação tem um custo quase constante para grafos pequenos.
 
   O pop_maxlabel é o principal gargalo de eficiência.
 
