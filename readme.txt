@@ -5,7 +5,7 @@ CI065 - ALGORITMOS E TEORIA DOS GRAFOS - 2018-1
 
 Prof. Renato Carmo
 Alunos: Paolo Andreas Stall Rechia - GRR 20135196
-        Luiz ...                   - GRR 
+        Luiz Gustavo Jhon Rodrigues - GRR 20153723
 
 
 ------------------------------------------------------------
