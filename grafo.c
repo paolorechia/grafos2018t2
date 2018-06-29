@@ -266,6 +266,7 @@ grafo escreve_grafo(FILE *output, grafo g) {
 //------------------------------------------------------------------------------
 // devolve um número entre 0 e o número de vertices de g
 
+// Nao utilizamos o ponteiro para o grafo
 unsigned int cor(vertice v, grafo g){
   Agnode_t * u = (Agnode_t *) v;
   atrb_t *  atrb = (atrb_t *) aggetrec(u, "atrb_t", FALSE);
@@ -282,7 +283,7 @@ static Agnode_t * vizinho(Agraph_t * g, Agnode_t * u, Agedge_t * e){
 
 static int tam_vizinhanca(Agraph_t * g, Agnode_t * u, Agedge_t * e){
   int tam = 0;
-  for (e = agfstedge(graph,u); e; e = agnxtedge(graph,e,u)){
+  for (e = agfstedge(g,u); e; e = agnxtedge(g,e,u)){
     tam++;
   }
   return tam;
@@ -348,17 +349,13 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   }
   // preenche o vetor 'v' com o reverso da ordem lexografica
   int j = num_vertices_g -1;
-  printf("Preenchendo v[i]\n");
+//  printf("Preenchendo v[i]\n");
   for (int i = 0; i < num_vertices_g; i++){
     u = ordem_lex[j];
     atributos_u = (atrb_t *) aggetrec(u, "atrb_t", FALSE);
-    printf("Vertice: %s (%s)\n", agnameof(u), atributos_u->rotulo);
+//    printf("Vertice: %s (%s)\n", agnameof(u), atributos_u->rotulo);
     v[i] = u;
     j--;
-  }
-  printf("Testando v[i]\n");
-  for (int i = 0; i < num_vertices_g; i++){
-    printf("Vertice: %s\n", agnameof(v[i]));
   }
   q_free(V);
   return (vertice *) v;
@@ -374,6 +371,8 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
 
 unsigned int colore(grafo g, vertice *v){
   Agnode_t * u;
+  Agnode_t * w;
+  Agedge_t * e;
   Agraph_t * graph = (Agraph_t*) g;
   Agsym_t * color = agattr(g, AGNODE, "color", "#000000");
   atrb_t * atrb;
@@ -381,32 +380,36 @@ unsigned int colore(grafo g, vertice *v){
   int cor_max = 0;
   int tam = n_vertices(g);
   int n_vizinhos;
+  int i = 0;
+  int j = 0;
+  int * cores_ocupadas;
+  int cor_minima = 1;
+  int encontrei_cor = 0;
 
   /* Pinta todos os vertices com a cor 0 */
-  for (int i = 0; i < tam; i++){
+  for (i = 0; i < tam; i++){
     atrb = aggetrec(v[i], "atrb_t", FALSE);
     atrb->cor = 0;
     printf("Zerando cor: %s\n", agnameof(v[i]));
   }
 
   // Coloracao gulosa */
-  for (int i = 0; i < tam; i++){
+  for (i = 0; i < tam; i++){
     n_vizinhos = tam_vizinhanca(graph, v[i], e);
-    int * cores_ocupadas = malloc(sizeof(int) * n_vizinhos); 
-    int j = 0;
+    cores_ocupadas = malloc(sizeof(int) * n_vizinhos); 
+    j = 0;
     for (e = agfstedge(graph,v[i]); e; e = agnxtedge(graph,e,v[i])){
         w = vizinho(graph, v[i], e);
-        atrb = (atrb_t *) aggetrec(w, "atrb_t", FALSE);
-        cores_ocupadas[j]=atrb->cor;
+        cores_ocupadas[j]=cor(w, graph);
         j++;
     }
-    int j = 0;
-    int cor_minima = 1;
-    int encontrei_cor = 0;
+    j = 0;
+    cor_minima = 1;
+    encontrei_cor = 0;
     while (!encontrei_cor){
-      int encontrei_cor = 1;
+      encontrei_cor = 1;
       for (j = 0; j < n_vizinhos; j++){
-        if (cor_minima == cor){
+        if (cor_minima == cores_ocupadas[j]){
           cor_minima++;  
           encontrei_cor = 0;
         }
@@ -415,10 +418,13 @@ unsigned int colore(grafo g, vertice *v){
     if (cor_minima > cor_max){
       cor_max = cor_minima;
     }
-    free(cores);
+    free(cores_ocupadas);
     atrb = aggetrec(v[i], "atrb_t", FALSE);
+    atrb->cor = cor_minima;
   }
   return cor_max;
+
+  // Transforma atributos internos do grafo em cores externas //
 
 //    agxset(v[i], cor, cores[i]);
 }
