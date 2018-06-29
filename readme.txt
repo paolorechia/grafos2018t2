@@ -55,6 +55,10 @@ Tópicos:
     Na prática, poderíamos ter implementado diretamente a
   lista duplamente encadeada (sem a operação 'pop'),
   porém isso só foi constatado após a fila estar 100% implementada.
+
+    O tamanho do maior rótulo possível foi definido em 1000
+  em macro, ou seja, o algoritmo não funcionaria para grafos
+  grandes.
   
 1.3 Eficiência da implementação da busca lexográfica.
 
@@ -62,17 +66,19 @@ Tópicos:
   O algoritmo consiste em basicamente:
     i) inserir todos os elementos na fila (n * O(1)).
     ii) retirar todos os elementos da fila (n * custo(pop_maxlabel))
-    iii) concatenar rotulos de u em w quando w não foi visitado
+    iii) concatenar rotulos de u em w quando w não foi visitado (n*custo_concat)
 
     A operação 'pop_maxlabel'  é cara, e exige uma busca
   sobre todos os elementos da fila O(n). Como a operação é
   chamada exatamente n vezes, temos um custo O(n^2).
 
-    A concatenação tem um custo praticamente constante
-  para grafos pequenos.
+    A concatenação tem um custo considerável, porque os rótulos crescem
+  rapidamente e no pior caso também custa O(n) quando é o último rótulo.
 
-  Assim, o pop_maxlabel consistente no principal gargalo
-  de eficiência.
+    Assim, o algoritmo tem um custo total aproximado entre O(n^2) a O(n^3):
+      n*custo(pop_maxlabel)*custo_concat = n *O(n) * O(n) = O(n^3)
+
+  O pop_maxlabel é o principal gargalo  de eficiência.
 
   De fato, encontramos vários artigos que descrevem uma versao
   desse algoritmo de tempo linear (ou quase linear: nlgn), utilizando

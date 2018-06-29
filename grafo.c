@@ -4,7 +4,7 @@
 #include <graphviz/cgraph.h>
 #include "grafo.h"
 
-#define TAM_ROTULO 100
+#define TAM_ROTULO 1000
 
 /*************************************************/
 /* Estrutura de dados auxiliar - Fila            */
@@ -335,7 +335,7 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
           w = vizinho(graph, u, e);
           atributos_w = (atrb_t *) agbindrec(w, "atrb_t", sizeof(atrb_t), FALSE);
           if (atributos_w->estado != 2){
-            strcpy(atributos_w->rotulo, agnameof(u));
+            strcat(atributos_w->rotulo, atributos_u->rotulo);
             strcat(atributos_w->rotulo, tam_V);
             // marca como visitado (irrelevante aparentemente)
             atributos_w->estado = 1;
@@ -370,8 +370,8 @@ void gera_rgb(int num_cor, int cor_max, char saida[7]){
   if (cor_max <= 5){
     char * cores[7] = {"#000000",
                        "#FF0000", "#00FF00", 
-                       "#0000FF", "#444666",
-                       "#000000", "#888222"};
+                       "#0000FF", "#FF00FF",
+                       "#111444", "#888222"};
     strcpy(saida, cores[num_cor]);
   }
   // se nao, gera cores proximas
