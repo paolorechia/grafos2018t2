@@ -72,7 +72,7 @@ static void q_push(tqueue * queue, void * key){
 // Funcao que busca o vertice de maior rotulo na fila
 static void * q_pop_maxlabel(tqueue * queue){
     if (queue->size == 0 || queue->start == NULL){
-      return -1;
+      return NULL;
     }
     void *key;
     tnode * max_node;
@@ -221,8 +221,8 @@ grafo escreve_grafo(FILE *output, grafo g) {
     else return NULL;
 }
 //------------------------------------------------------------------------------
-// devolve um número entre 0 e o número de vertices de g
 
+// devolve um número entre 0 e o número de vertices de g
 // Nao utilizamos o ponteiro para o grafo
 unsigned int cor(vertice v, grafo g){
   char atrbstr[6] = "atrb_t";
@@ -257,7 +257,7 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   Agraph_t * graph = (Agraph_t *)g;
   Agnode_t * u; 
   Agnode_t * w; 
-  Agnode_t * raiz = (agnode_t *) r; 
+  Agnode_t * raiz = (Agnode_t *) r; 
   Agedge_t * e; 
   atrb_t * atributos_u;
   atrb_t * atributos_w;
@@ -265,7 +265,7 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   tqueue * V = q_init();
   int num_vertices_g = n_vertices(g);
   int i = 0;
-  Agnode_t ** ordem_lex = malloc(sizeof(agnode_t) * num_vertices_g);
+  Agnode_t ** ordem_lex = malloc(sizeof(agnode_t) * ((long unsigned int )num_vertices_g));
   char tam_V[16];
 
   // Inicializa vertices, monta conjunto inicial com todos os vertices
@@ -283,8 +283,8 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   strcpy(atributos_u->rotulo,tam_V);
 
   // Inicia a busca
-  while ((u = (Agnode_t * ) q_pop_maxlabel(V)) != -1){
-    atributos_u = aggetrec(u, atrbstr, FALSE);
+  while ((u = (Agnode_t * ) q_pop_maxlabel(V))){
+    atributos_u = (atrb_t *) aggetrec(u, atrbstr, FALSE);
 //    printf("%s %d\n", agnameof(u), atributos_u->estado);
     if (atributos_u->estado != 2){
       // registra quantos vertices ainda estao em V
@@ -338,7 +338,7 @@ static void gera_rgb(unsigned int num_cor, unsigned int cor_max, char saida[7]){
     int tam_num = 0;
     int espacos = 0;
     sprintf(numero, "%u", num_cor);
-    tam_num = strlen(numero);
+    tam_num = (int) strlen(numero);
     espacos = 6 - tam_num;
     sprintf(string_cor, "#");
     while (espacos > 0){
@@ -358,6 +358,7 @@ static void gera_rgb(unsigned int num_cor, unsigned int cor_max, char saida[7]){
 //     1. cor(v,g) > 0 para todo vértice de g
 //     2. cor(u,g) != cor(v,g), para toda aresta {u,v} de g
 unsigned int colore(grafo g, vertice *v){
+  Agnode_t * u;
   Agnode_t * w;
   Agedge_t * e;
   Agraph_t * graph = (Agraph_t*) g;
@@ -374,18 +375,19 @@ unsigned int colore(grafo g, vertice *v){
 
   /* Pinta todos os vertices com a cor 0 */
   for (i = 0; i < tam; i++){
-    atrb = aggetrec(v[i], atrbstr, FALSE);
+    atrb = (atrb_t * )aggetrec(v[i], atrbstr, FALSE);
     atrb->cor = 0;
   }
 
   // Coloracao gulosa */
   for (i = 0; i < tam; i++){
-    n_vizinhos = tam_vizinhanca(graph, v[i], e);
-    cores_ocupadas = malloc(sizeof(int) * n_vizinhos); 
+    u = (Agnode_t * ) v[i];
+    n_vizinhos = tam_vizinhanca(graph, u, e);
+    cores_ocupadas = malloc(sizeof(int) * (long unsigned int) n_vizinhos); 
     j = 0;
-    for (e = agfstedge(graph,v[i]); e; e = agnxtedge(graph,e,v[i])){
-        w = vizinho(graph, v[i], e);
-        cores_ocupadas[j]=cor(w, graph);
+    for (e = agfstedge(graph,u); e; e = agnxtedge(graph,e,u)){
+        w = vizinho(graph, u, e);
+        cores_ocupadas[j]=cor((vertice) w, (grafo)graph);
         j++;
     }
     j = 0;
@@ -404,7 +406,7 @@ unsigned int colore(grafo g, vertice *v){
       cor_max = cor_minima;
     }
     free(cores_ocupadas);
-    atrb = aggetrec(v[i], atrbstr, FALSE);
+    atrb = (atrb_t * )aggetrec(v[i], atrbstr, FALSE);
     atrb->cor = cor_minima;
   }
 
