@@ -37,7 +37,7 @@ typedef struct vertice_s{
   Agrec_t h;
   char rotulo[TAM_ROTULO];
   int estado;
-  int cor;
+  unsigned int cor;
 } atrb_t; // define atributos do vertice
 
 
@@ -374,9 +374,7 @@ unsigned int colore(grafo g, vertice *v){
   Agnode_t * w;
   Agedge_t * e;
   Agraph_t * graph = (Agraph_t*) g;
-  Agsym_t * color = agattr(g, AGNODE, "color", "#000000");
   atrb_t * atrb;
-  char * cores[] = {"#FF0000", "#00FF00", "#0000FF"};
   int cor_max = 0;
   int tam = n_vertices(g);
   int n_vizinhos;
@@ -422,11 +420,17 @@ unsigned int colore(grafo g, vertice *v){
     atrb = aggetrec(v[i], "atrb_t", FALSE);
     atrb->cor = cor_minima;
   }
-  return cor_max;
 
   // Transforma atributos internos do grafo em cores externas //
-
-//    agxset(v[i], cor, cores[i]);
+  Agsym_t * color = agattr(graph, AGNODE, "color", "#000000");
+  char string_cor[100];
+  for (i = 0; i < tam; i++){
+    printf("%d\n", i);
+    cor_minima = cor(v[i], graph);
+    sprintf(string_cor, "%u", cor_minima);
+    agxset(v[i], color, string_cor);
+  }
+  return cor_max;
 }
 
 //------------------------------------------------------------------------------
