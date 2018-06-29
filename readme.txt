@@ -53,10 +53,10 @@ Tópicos:
   antigo da fila, retira aquele de maior rótulo (string de 
   maior comprimento).
     Na prática, poderíamos ter implementado diretamente a
-  lista duplamente encadeada (sem a operação 'pop'),
-  porém isso só foi constatado após a fila estar 100% implementada.
+  lista duplamente encadeada porém isso só foi constatado
+  após a fila estar 100% implementada.
 
-    O tamanho do maior rótulo possível foi definido em 1000
+    O tamanho do maior rótulo possível foi definido em '1000'
   em macro, ou seja, o algoritmo não funcionaria para grafos
   grandes.
   
@@ -78,7 +78,7 @@ Tópicos:
     Assim, o algoritmo tem um custo total aproximado entre O(n^2) a O(n^3):
       n*custo(pop_maxlabel)*custo_concat = n *O(n) * O(n) = O(n^3)
 
-  O pop_maxlabel é o principal gargalo  de eficiência.
+  O pop_maxlabel é o principal gargalo de eficiência.
 
   De fato, encontramos vários artigos que descrevem uma versao
   desse algoritmo de tempo linear (ou quase linear: nlgn), utilizando
