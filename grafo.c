@@ -361,6 +361,38 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   return (vertice *) v;
 }
 
+
+// Transforma o numero da cor em uma string rgb
+// Grava resultado na string saida
+void gera_rgb(int num_cor, int cor_max, char saida[7]){
+  
+  // se sao poucas colores, colore de forma facil de visualizar
+  if (cor_max <= 5){
+    char * cores[7] = {"#000000",
+                       "#FF0000", "#00FF00", 
+                       "#0000FF", "#444666",
+                       "#000000", "#888222"};
+    strcpy(saida, cores[num_cor]);
+  }
+  // se nao, gera cores proximas
+  else{
+    char string_cor[7];
+    char numero[6];
+    int tam_num = 0;
+    int espacos = 0;
+    sprintf(numero, "%u", num_cor);
+    tam_num = strlen(numero);
+    espacos = 6 - tam_num;
+    sprintf(string_cor, "#");
+    while (espacos > 0){
+      strcat(string_cor, "0");
+      espacos --;
+    }
+    strcat(string_cor, numero);
+    strcpy(saida, string_cor);
+  }
+}
+
 //------------------------------------------------------------------------------
 // colore os vértices de g de maneira "gulosa" segundo a ordem dos
 // vértices em v e devolve o número de cores utilizado
@@ -368,7 +400,6 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
 // ao final da execução,
 //     1. cor(v,g) > 0 para todo vértice de g
 //     2. cor(u,g) != cor(v,g), para toda aresta {u,v} de g
-
 unsigned int colore(grafo g, vertice *v){
   Agnode_t * u;
   Agnode_t * w;
@@ -423,11 +454,11 @@ unsigned int colore(grafo g, vertice *v){
 
   // Transforma atributos internos do grafo em cores externas //
   Agsym_t * color = agattr(graph, AGNODE, "color", "#000000");
-  char string_cor[100];
+  char string_cor[7];
   for (i = 0; i < tam; i++){
     printf("%d\n", i);
     cor_minima = cor(v[i], graph);
-    sprintf(string_cor, "%u", cor_minima);
+    gera_rgb(cor_minima, cor_max, string_cor);
     agxset(v[i], color, string_cor);
   }
   return cor_max;
