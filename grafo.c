@@ -12,9 +12,9 @@
 /* FIFO implementada sobre                       */
 /* uma lista duplamente encadeada                */
 /*                                               */
-/*                                               */
-/*                                               */
-/*                                               */
+/* Implementada com uma operação extra:          */
+/*  pop_maxlabel (remove o elemento de maior     */
+/*  rótulo ao invés do primeiro da fila)         */
 /*                                               */
 /*************************************************/
 typedef struct cel_struct{
@@ -37,7 +37,6 @@ typedef struct vertice_s{
   Agrec_t h;
   char rotulo[TAM_ROTULO];
   int estado;
-  int cor;
 } atrb_t; // define atributos do vertice
 
 
@@ -95,7 +94,7 @@ static void * q_pop(tqueue * queue){
 }
 
 static void * q_pop_maxlabel(tqueue * queue){
-    printf ("Queue size: %d\n");
+//    printf ("Queue size: %d\n", queue->size);
     if (queue->size == 0 || queue->start == NULL){
       return -1;
     }
@@ -111,19 +110,19 @@ static void * q_pop_maxlabel(tqueue * queue){
       int label_size = 0;
       atrb_t * atrib;
       tnode * node = queue->start;
-      printf("Start:  %s\n", agnameof(node->data));
+//      printf("Start:  %s\n", agnameof(node->data));
 //      tnode * node = queue->start->next;
       while (node){
         atrib = (atrb_t *) aggetrec((Agnode_t *)node->data, "atrb_t", FALSE);
         label_size = strlen(atrib->rotulo);
-        printf("Node:  %s, label: %d\n", agnameof(node->data), label_size);
+//        printf("Node:  %s, label: %d\n", agnameof(node->data), label_size);
         if (label_size >= max_label_size){
           max_node = node;
           max_label_size = label_size;
         }
         node = node->next;
       }
-      printf("Found max: %s, label: %d\n", agnameof(max_node->data), max_label_size);
+//      printf("Found max: %s, label: %d\n", agnameof(max_node->data), max_label_size);
       // sanity check, not supposed to enter here
       if (max_node->prev != NULL && max_node->next !=NULL){
         max_node->next->prev = max_node->prev;
@@ -287,13 +286,14 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   atrb_t * atributos_w;
   tqueue * V = q_init();
   int num_vertices_g = n_vertices(g);
+  int i = 0;
+  Agedge_t ** ordem_lex = malloc(sizeof(agnode_t) * num_vertices_g);
   char tam_V[16];
 
   // Inicializa vertices, monta conjunto inicial com todos os vertices
   for(u = agfstnode(graph); u; u = agnxtnode(graph, u)){
     atributos_u = (atrb_t *) agbindrec(u, "atrb_t", sizeof(atrb_t), FALSE);
     atributos_u->estado = 0;
-    atributos_u->cor= 0;
     strcpy(atributos_u->rotulo, "");
     q_push(V, (void *) u);
   }
@@ -304,10 +304,6 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   sprintf(tam_V, "%d", V->size);
   strcpy(atributos_u->rotulo,tam_V);
 
-  while ((u = (Agnode_t * ) q_pop_maxlabel(V)) != -1){
-    printf("%s %d\n", agnameof(u), atributos_u->estado);
-  }
-/*
   // Inicia a busca
   while ((u = (Agnode_t * ) q_pop_maxlabel(V)) != -1){
     atributos_u = aggetrec(u, "atrb_t", FALSE);
@@ -324,17 +320,28 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
               w = agnode(graph, agnameof(aghead(e)), FALSE);
           }
           atributos_w = (atrb_t *) agbindrec(w, "atrb_t", sizeof(atrb_t), FALSE);
-          strcpy(atributos_w->rotulo, agnameof(u));
-          strcat(atributos_w->rotulo, tam_V);
-          atributos_w->estado = 1;
-//          q_push(V, (void *)w); 
+          if (atributos_w->estado != 2){
+            strcpy(atributos_w->rotulo, agnameof(u));
+            strcat(atributos_w->rotulo, tam_V);
+            // marca como visitado (irrelevante aparentemente)
+            atributos_w->estado = 1;
+          }
       }
     }
     // marca u como buscado
     atributos_u->estado = 2;
+    ordem_lex[i]=u;
+    i++;
   }
-*/
-
+  // preenche o vetor 'v' com o reverso da ordem lexografica
+  int j = num_vertices_g -1;
+  for (int i = 0; i < num_vertices_g; i++){
+    u = ordem_lex[j];
+    atributos_u = (atrb_t *) aggetrec(u, "atrb_t", FALSE);
+    printf("Vertice: %s (%s)\n", agnameof(u), atributos_u->rotulo);
+    v[i] = u;
+    j--;
+  }
   q_free(V);
   return (vertice *) v;
 }
@@ -348,7 +355,15 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
 //     2. cor(u,g) != cor(v,g), para toda aresta {u,v} de g
 
 unsigned int colore(grafo g, vertice *v){
-
+  Agnode_t * u;
+  Agraph_t * graph = (Agraph_t*) g;
+  Agsym_t * cor = agattr(g, AGNODE, "color", "#000000");
+  char * cores[] = {"#FF0000", "#00FF00", "#0000FF"};
+  int i = 0;
+  for (u = agfstnode(graph); u; u = agnxtnode(graph, u)){
+    agxset(u, cor, cores[i]);
+    i++;
+  }
   return 0;
 }
 
