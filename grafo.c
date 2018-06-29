@@ -160,7 +160,7 @@ static void q_print_v(tqueue * queue){
     tnode * node = queue->start;
     while (node){
         Agnode_t * v = node->data;
-        printf("%s ", agnameof(v));
+//        printf("%s ", agnameof(v));
         node = node->next;
     }
     putchar('\n');
@@ -326,7 +326,7 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   // Inicia a busca
   while ((u = (Agnode_t * ) q_pop_maxlabel(V)) != -1){
     atributos_u = aggetrec(u, "atrb_t", FALSE);
-    printf("%s %d\n", agnameof(u), atributos_u->estado);
+//    printf("%s %d\n", agnameof(u), atributos_u->estado);
     if (atributos_u->estado != 2){
       // registra quantos vertices ainda estao em V
       sprintf(tam_V, "%d", V->size);
@@ -353,7 +353,7 @@ vertice * busca_lexicografica(vertice r, grafo g, vertice *v){
   for (int i = 0; i < num_vertices_g; i++){
     u = ordem_lex[j];
     atributos_u = (atrb_t *) aggetrec(u, "atrb_t", FALSE);
-//    printf("Vertice: %s (%s)\n", agnameof(u), atributos_u->rotulo);
+    printf("Vertice: %s (%s)\n", agnameof(u), atributos_u->rotulo);
     v[i] = u;
     j--;
   }
@@ -419,7 +419,7 @@ unsigned int colore(grafo g, vertice *v){
   for (i = 0; i < tam; i++){
     atrb = aggetrec(v[i], "atrb_t", FALSE);
     atrb->cor = 0;
-    printf("Zerando cor: %s\n", agnameof(v[i]));
+//    printf("Zerando cor: %s\n", agnameof(v[i]));
   }
 
   // Coloracao gulosa */
@@ -456,7 +456,7 @@ unsigned int colore(grafo g, vertice *v){
   Agsym_t * color = agattr(graph, AGNODE, "color", "#000000");
   char string_cor[7];
   for (i = 0; i < tam; i++){
-    printf("%d\n", i);
+//    printf("%d\n", i);
     cor_minima = cor(v[i], graph);
     gera_rgb(cor_minima, cor_max, string_cor);
     agxset(v[i], color, string_cor);
